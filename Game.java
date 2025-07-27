@@ -11,7 +11,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
     private final Set<Integer> keys = new HashSet<>();
     private final int width = 320;
     private final int height = 240;
-    private final int scale = 4; // Scale factor (2x -> 640x480)
+    private final int scale = 2; // Scale factor (2x -> 640x480)
 
     private final BufferedImage image;
     private final int[] pixels;
@@ -49,7 +49,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
     private void update() {
         // Clear screen
         for (int i = 0; i < pixels.length; i++) {
-            pixels[i] = 0x2D2D2D; // Dark gray background
+            pixels[i] = 0xFFFFFF; // Dark gray background
         }
 
         player.update(keys);
@@ -65,6 +65,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Pixel Game 320x240");
+        Assets.init();
         Game game = new Game();
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

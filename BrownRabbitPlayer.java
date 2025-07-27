@@ -1,68 +1,69 @@
+
+// BrownRabbitPlayer.java
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.util.Set;
 
 public class BrownRabbitPlayer extends Player {
-
     private enum Direction {
-        NONE, LEFT, RIGHT, BACK
+        NONE, LEFT, RIGHT, BACK, UP
     }
 
     private Direction currentDirection = Direction.NONE;
-    private boolean isJumping = false;
 
-    public BrownRabbitPlayer(ActionStrategy action, MissStrategy miss) {
-        super(action, miss);
+    private final BufferedImage[] walkDown;
+    private final BufferedImage[] walkUp;
+    private final BufferedImage[] walkLeft;
+    private final BufferedImage[] walkRight;
+    private final BufferedImage[] idle;
+
+    public BrownRabbitPlayer(ActionStrategy a, MissStrategy m) {
+        // ПЕРЕДАЁМ sheet в super!
+        super(a, m, Assets.brownRabbitSheet);
+
+        idle = sheet.getRow(0);
+        walkUp = sheet.getRow(1);
+        walkLeft = sheet.getRow(2);
+        walkRight = sheet.getRow(3);
+        walkDown = sheet.getRow(4);
     }
 
     @Override
     public void update(Set<Integer> keys) {
-        // Сначала базовое движение + тайминг анимации
         super.update(keys);
-
-        // Определяем, прыгаем ли мы (пробел)
-        isJumping = keys.contains(KeyEvent.VK_SPACE);
-
-        // Запоминаем последнее направление стрелок
-        if (keys.contains(KeyEvent.VK_LEFT)) {
+        if (keys.contains(KeyEvent.VK_LEFT))
             currentDirection = Direction.LEFT;
-        } else if (keys.contains(KeyEvent.VK_RIGHT)) {
+        else if (keys.contains(KeyEvent.VK_RIGHT))
             currentDirection = Direction.RIGHT;
-        } else if (keys.contains(KeyEvent.VK_UP)) {
+        else if (keys.contains(KeyEvent.VK_DOWN))
             currentDirection = Direction.BACK;
-        } else if (keys.contains(KeyEvent.VK_DOWN)) {
+        else if (keys.contains(KeyEvent.VK_UP))
+            currentDirection = Direction.UP;
+        else
             currentDirection = Direction.NONE;
-        }
-        // если ни одна стрелка не нажата — направление не меняется
     }
 
     @Override
-    public void render(int[] pixels, int screenW, int screenH) {
-        int frame = getAnimationFrame(); // 0,1 или 2
-        int[][] sprite;
-
-        if (isJumping) {
-            // выбираем «прыжковый» спрайт в зависимости от направления
-            switch (currentDirection) {
-                case RIGHT:
-                    sprite = BrownRabbitSprite.RABBIT_JUMP_RIGHT[frame];
-                    break;
-                case LEFT:
-                    sprite = BrownRabbitSprite.RABBIT_JUMP_LEFT[frame];
-                    break;
-                case BACK:
-                    sprite = BrownRabbitSprite.RABBIT_JUMP_BACK[frame];
-                    break;
-                default:
-                    // если direction==NONE — прыгаем вперед лицом к нам
-                    sprite = BrownRabbitSprite.RABBIT_FACE[frame];
-                    break;
-            }
-        } else {
-            // обычная ходовая анимация лицом к нам
-            sprite = BrownRabbitSprite.RABBIT_FACE[frame];
+    public void render(int[] pixels, int w, int h) {
+        int f = getAnimationFrame();
+        BufferedImage img;
+        switch (currentDirection) {
+            case RIGHT:
+                img = walkRight[f];
+                break;
+            case LEFT:
+                img = walkLeft[f];
+                break;
+            case BACK:
+                img = walkDown[f];
+                break;
+            case UP:
+                img = walkUp[f];
+                break;
+            default:
+                img = idle[f];
+                break;
         }
-
-        // рисуем там, где базовый класс хранит свои x/y
-        Sprite.drawSprite(pixels, screenW, screenH, getX(), getY(), sprite);
+        Sprite.drawImage(pixels, w, h, getX(), getY(), img);
     }
 }

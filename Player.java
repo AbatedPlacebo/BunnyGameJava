@@ -1,3 +1,5 @@
+
+// Player.java
 import java.awt.event.KeyEvent;
 import java.util.Set;
 
@@ -9,9 +11,18 @@ public class Player {
     private int animationFrame = 0;
     private int animationTick = 0;
 
+    protected final SpriteSheet sheet; // <- храним здесь
+
+    // Старый конструктор, если нужен «пустой» sheet:
     public Player(ActionStrategy action, MissStrategy miss) {
+        this(action, miss, null);
+    }
+
+    // Новый конструктор, принимающий SpriteSheet:
+    public Player(ActionStrategy action, MissStrategy miss, SpriteSheet sheet) {
         this.actionStrategy = action;
         this.missStrategy = miss;
+        this.sheet = sheet;
     }
 
     protected int getX() {
@@ -23,8 +34,8 @@ public class Player {
     }
 
     protected int getAnimationFrame() {
-        return animationFrame % 3;
-    } // Use % 3 for 3 bunny frames
+        return animationFrame % 4;
+    }
 
     public void act() {
         if (missStrategy.isMissed()) {
@@ -36,7 +47,6 @@ public class Player {
 
     public void update(Set<Integer> keys) {
         boolean moving = false;
-
         if (keys.contains(KeyEvent.VK_LEFT)) {
             x--;
             moving = true;
@@ -54,21 +64,13 @@ public class Player {
             moving = true;
         }
 
-        if (moving) {
-            animationTick++;
-            if (animationTick % 10 == 0) {
-                animationFrame++;
-            }
-        } else {
-            animationFrame = 0; // idle frame
-        }
+        animationTick++;
+        if (animationTick % 10 == 0)
+            animationFrame++;
     }
 
+    // В этом базовом методе мы уже не рендерим никаких кадров:
     public void render(int[] pixels, int screenW, int screenH) {
-        if (animationFrame == 0) {
-            Sprite.drawSprite(pixels, screenW, screenH, x, y, Sprite.PLAYER_FRAME_1);
-        } else {
-            Sprite.drawSprite(pixels, screenW, screenH, x, y, Sprite.PLAYER_FRAME_2);
-        }
+        // Может остаться пустым, или общая «заглушка».
     }
 }
