@@ -9,12 +9,14 @@ import java.util.Set;
 
 public class Game extends JPanel implements Runnable, KeyListener {
     private final Set<Integer> keys = new HashSet<>();
-    private final int width = 320;
-    private final int height = 240;
+    private final int width = 353;
+    private final int height = 180;
     private final int scale = 2; // Scale factor (2x -> 640x480)
 
     private final BufferedImage image;
     private final int[] pixels;
+
+    private Level currentLevel;
 
     private Player player = new BrownRabbitPlayer(new WarriorAction(), new WarriorMissChance());
 
@@ -32,6 +34,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
         setFocusable(true);
         requestFocusInWindow();
         addKeyListener(this);
+        currentLevel = new Level("/maps/LevelA.png"); // assumes in resources
     }
 
     public void start() {
@@ -54,13 +57,14 @@ public class Game extends JPanel implements Runnable, KeyListener {
     }
 
     private void update() {
-        for (int i = 0; i < pixels.length; i++) {
-            pixels[i] = 0xFFFFFF; // Light gray background
-        }
-
         if (gameState == GameState.PLAYING) {
+            currentLevel.render(pixels, width, height); // draw level first
             player.update(keys);
             player.render(pixels, width, height);
+        } else {
+            for (int i = 0; i < pixels.length; i++) {
+                pixels[i] = 0xFFFFFF; // menu background
+            }
         }
     }
 

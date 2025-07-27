@@ -16,7 +16,7 @@ public class Player {
     private float jumpVelocity = 0;
     private final double gravity = 0.2;
     private final int jumpStrength = -4;
-    private final int groundY = 100; // можно передавать или вычислять в будущем
+    private final int groundY = 125; // можно передавать или вычислять в будущем
 
     protected final SpriteSheet sheet; // <- храним здесь
 
@@ -31,6 +31,10 @@ public class Player {
 
     protected boolean isJumping() {
         return jumping;
+    }
+
+    private boolean isOnGround() {
+        return y >= groundY;
     }
 
     // Новый конструктор, принимающий SpriteSheet:
@@ -75,17 +79,18 @@ public class Player {
         }
 
         // Прыжок, если не в воздухе
-        if (keys.contains(KeyEvent.VK_UP) && !jumping) {
+        if (keys.contains(KeyEvent.VK_UP) && !jumping && isOnGround()) {
             jumping = true;
             jumpVelocity = jumpStrength;
-            moving = true; // прыжок — тоже движение
+            moving = true;
         }
 
-        // Обработка прыжка
-        if (jumping) {
+        // Обработка прыжка и падения
+        if (jumping || !isOnGround()) {
             y += jumpVelocity;
             jumpVelocity += gravity;
 
+            // Приземление
             if (y >= groundY) {
                 y = groundY;
                 jumping = false;
@@ -93,7 +98,7 @@ public class Player {
             }
         }
 
-        // Если только что начал движение (wasMoving == false → moving == true)
+        // Сброс анимации, если только начали движение
         if (moving && !wasMoving) {
             animationFrame = 0;
             animationTick = 0;
