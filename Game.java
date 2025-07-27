@@ -18,6 +18,13 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
     private Player player = new BrownRabbitPlayer(new WarriorAction(), new WarriorMissChance());
 
+    private enum GameState {
+        MAIN_MENU,
+        PLAYING
+    }
+
+    private GameState gameState = GameState.MAIN_MENU;
+
     public Game() {
         setPreferredSize(new Dimension(width * scale, height * scale));
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -47,20 +54,28 @@ public class Game extends JPanel implements Runnable, KeyListener {
     }
 
     private void update() {
-        // Clear screen
         for (int i = 0; i < pixels.length; i++) {
-            pixels[i] = 0xFFFFFF; // Dark gray background
+            pixels[i] = 0xFFFFFF; // Light gray background
         }
 
-        player.update(keys);
-        player.render(pixels, width, height);
-
+        if (gameState == GameState.PLAYING) {
+            player.update(keys);
+            player.render(pixels, width, height);
+        }
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawImage(image, 0, 0, width * scale, height * scale, null);
+
+        if (gameState == GameState.MAIN_MENU) {
+            g.setColor(Color.BLACK);
+            g.setFont(new Font("Arial", Font.BOLD, 24));
+            g.drawString("🐰 Brown Rabbit Adventure", 40, 80);
+            g.setFont(new Font("Arial", Font.PLAIN, 16));
+            g.drawString("Press ENTER to Start", 90, 130);
+        }
     }
 
     public static void main(String[] args) {
@@ -81,6 +96,10 @@ public class Game extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         keys.add(e.getKeyCode());
+
+        if (gameState == GameState.MAIN_MENU && e.getKeyCode() == KeyEvent.VK_ENTER) {
+            gameState = GameState.PLAYING;
+        }
     }
 
     @Override

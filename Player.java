@@ -10,12 +10,27 @@ public class Player {
     private int x = 100, y = 100;
     private int animationFrame = 0;
     private int animationTick = 0;
+    private boolean wasMoving = false;
+    private boolean moving = false;
+    private boolean jumping = false;
+    private float jumpVelocity = 0;
+    private final double gravity = 0.2;
+    private final int jumpStrength = -4;
+    private final int groundY = 100; // можно передавать или вычислять в будущем
 
     protected final SpriteSheet sheet; // <- храним здесь
 
     // Старый конструктор, если нужен «пустой» sheet:
     public Player(ActionStrategy action, MissStrategy miss) {
         this(action, miss, null);
+    }
+
+    protected boolean isMoving() {
+        return moving;
+    }
+
+    protected boolean isJumping() {
+        return jumping;
     }
 
     // Новый конструктор, принимающий SpriteSheet:
@@ -46,7 +61,10 @@ public class Player {
     }
 
     public void update(Set<Integer> keys) {
-        boolean moving = false;
+        wasMoving = moving;
+        moving = false;
+
+        // Горизонтальное движение
         if (keys.contains(KeyEvent.VK_LEFT)) {
             x--;
             moving = true;
@@ -55,13 +73,30 @@ public class Player {
             x++;
             moving = true;
         }
-        if (keys.contains(KeyEvent.VK_UP)) {
-            y--;
-            moving = true;
+
+        // Прыжок, если не в воздухе
+        if (keys.contains(KeyEvent.VK_UP) && !jumping) {
+            jumping = true;
+            jumpVelocity = jumpStrength;
+            moving = true; // прыжок — тоже движение
         }
-        if (keys.contains(KeyEvent.VK_DOWN)) {
-            y++;
-            moving = true;
+
+        // Обработка прыжка
+        if (jumping) {
+            y += jumpVelocity;
+            jumpVelocity += gravity;
+
+            if (y >= groundY) {
+                y = groundY;
+                jumping = false;
+                jumpVelocity = 0;
+            }
+        }
+
+        // Если только что начал движение (wasMoving == false → moving == true)
+        if (moving && !wasMoving) {
+            animationFrame = 0;
+            animationTick = 0;
         }
 
         animationTick++;

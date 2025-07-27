@@ -7,7 +7,7 @@ public class Assets {
      */
     public static void init() {
         brownRabbitSheet = new SpriteSheet(
-                "/sprites/brown_rabbit.png", // путь внутри JAR/resources
+                "/sprites/bunny.png", // путь внутри JAR/resources
                 32, 32);
     }
 }
