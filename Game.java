@@ -4,6 +4,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,7 +13,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
     private final Set<Integer> keys = new HashSet<>();
     private final int width = 353;
     private final int height = 180;
-    private final int scale = 2; // Scale factor (2x -> 640x480)
+    private final int scale = 4; // Scale factor (2x -> 640x480)
 
     private final BufferedImage image;
     private final int[] pixels;
@@ -19,6 +21,8 @@ public class Game extends JPanel implements Runnable, KeyListener {
     private Level currentLevel;
 
     private Player player = new BrownRabbitPlayer(new WarriorAction(), new WarriorMissChance());
+
+    private final List<Entity> entities = new ArrayList<>();
 
     private enum GameState {
         MAIN_MENU,
@@ -35,6 +39,8 @@ public class Game extends JPanel implements Runnable, KeyListener {
         requestFocusInWindow();
         addKeyListener(this);
         currentLevel = new Level("/maps/LevelA.png"); // assumes in resources
+        entities.add(player);
+        entities.add(new FoxNPC(200, 125, 150, 300));
     }
 
     public void start() {
@@ -58,9 +64,11 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
     private void update() {
         if (gameState == GameState.PLAYING) {
-            currentLevel.render(pixels, width, height); // draw level first
-            player.update(keys);
-            player.render(pixels, width, height);
+            currentLevel.render(pixels, width, height);
+            for (Entity e : entities) {
+                e.update(keys);
+                e.render(pixels, width, height);
+            }
         } else {
             for (int i = 0; i < pixels.length; i++) {
                 pixels[i] = 0xFFFFFF; // menu background
@@ -76,7 +84,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
         if (gameState == GameState.MAIN_MENU) {
             g.setColor(Color.BLACK);
             g.setFont(new Font("Arial", Font.BOLD, 24));
-            g.drawString("🐰 Brown Rabbit Adventure", 40, 80);
+            g.drawString("Brown Rabbit Adventure", 40, 80);
             g.setFont(new Font("Arial", Font.PLAIN, 16));
             g.drawString("Press ENTER to Start", 90, 130);
         }

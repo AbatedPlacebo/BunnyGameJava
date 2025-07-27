@@ -3,7 +3,7 @@
 import java.awt.event.KeyEvent;
 import java.util.Set;
 
-public class Player {
+public class Player extends Entity {
     private ActionStrategy actionStrategy;
     private MissStrategy missStrategy;
 
@@ -39,6 +39,7 @@ public class Player {
 
     // Новый конструктор, принимающий SpriteSheet:
     public Player(ActionStrategy action, MissStrategy miss, SpriteSheet sheet) {
+        super(100, 125, sheet);
         this.actionStrategy = action;
         this.missStrategy = miss;
         this.sheet = sheet;
