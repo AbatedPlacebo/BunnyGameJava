@@ -1,5 +1,3 @@
-
-// Player.java
 import java.awt.event.KeyEvent;
 import java.util.Set;
 
@@ -17,12 +15,21 @@ public class Player extends Entity {
     private final double gravity = 0.2;
     private final int jumpStrength = -4;
     private final int groundY = 125; // можно передавать или вычислять в будущем
+    private int speed = 2;
 
     protected final SpriteSheet sheet; // <- храним здесь
 
     // Старый конструктор, если нужен «пустой» sheet:
     public Player(ActionStrategy action, MissStrategy miss) {
         this(action, miss, null);
+    }
+
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+
+    public int getSpeed() {
+        return speed;
     }
 
     protected boolean isMoving() {
@@ -69,18 +76,24 @@ public class Player extends Entity {
         wasMoving = moving;
         moving = false;
 
+        if (keys.contains(KeyEvent.VK_SHIFT)) {
+            speed = 4;
+        } else {
+            speed = 2;
+        }
+
         // Горизонтальное движение
         if (keys.contains(KeyEvent.VK_LEFT)) {
-            x--;
+            x -= speed;
             moving = true;
         }
         if (keys.contains(KeyEvent.VK_RIGHT)) {
-            x++;
+            x += speed;
             moving = true;
         }
 
         // Прыжок, если не в воздухе
-        if (keys.contains(KeyEvent.VK_UP) && !jumping && isOnGround()) {
+        if ((keys.contains(KeyEvent.VK_UP) || keys.contains(KeyEvent.VK_SPACE)) && !jumping && isOnGround()) {
             jumping = true;
             jumpVelocity = jumpStrength;
             moving = true;
@@ -114,4 +127,6 @@ public class Player extends Entity {
     public void render(int[] pixels, int screenW, int screenH) {
         // Может остаться пустым, или общая «заглушка».
     }
+
+    // TODO: Health reducing
 }

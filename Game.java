@@ -40,7 +40,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
         addKeyListener(this);
         currentLevel = new Level("/maps/LevelA.png"); // assumes in resources
         entities.add(player);
-        entities.add(new FoxNPC(200, 125, 150, 300));
+        entities.add(new FoxNPC(200, 125, 150, 300, player));
     }
 
     public void start() {
