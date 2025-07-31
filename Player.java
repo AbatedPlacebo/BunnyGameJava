@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.util.Set;
 
@@ -16,8 +17,26 @@ public class Player extends Entity {
     private final int jumpStrength = -4;
     private final int groundY = 125; // можно передавать или вычислять в будущем
     private int speed = 2;
+    private int health = 100; // Default health value
+    private int maxHealth = 100;
+
+    // Add these fields to your Player class
+    private float knockbackVelocityX = 0;
+    private float knockbackAccelerationX = 0;
+    private boolean inKnockback = false;
+
+    protected boolean isHit = false;
+    protected int hitFlashFrames = 0;
+    protected static final int HIT_FLASH_DURATION = 20; // Duration in frames (adjust as needed)
 
     protected final SpriteSheet sheet; // <- храним здесь
+
+    protected enum Direction {
+        NONE, LEFT, RIGHT
+    }
+
+    protected Direction currentDirection = Direction.RIGHT;
+    protected Direction lastDirection = Direction.RIGHT;
 
     // Старый конструктор, если нужен «пустой» sheet:
     public Player(ActionStrategy action, MissStrategy miss) {
@@ -76,20 +95,53 @@ public class Player extends Entity {
         wasMoving = moving;
         moving = false;
 
+        // Handle knockback physics first
+        if (inKnockback) {
+            // Apply knockback movement
+            x += knockbackVelocityX;
+            knockbackVelocityX += knockbackAccelerationX;
+
+            // Apply gravity during knockback
+            y += jumpVelocity;
+            jumpVelocity += gravity;
+
+            // Check if knockback has ended
+            if (Math.abs(knockbackVelocityX) < 0.5f) {
+                knockbackVelocityX = 0;
+                inKnockback = false;
+            }
+
+            // Ground check
+            if (y >= groundY) {
+                y = groundY;
+                jumping = false;
+                jumpVelocity = 0;
+            }
+
+            animationTick++;
+            if (animationTick % 10 == 0)
+                animationFrame++;
+            return; // Skip normal movement during knockback
+        }
+
         if (keys.contains(KeyEvent.VK_SHIFT)) {
             speed = 4;
         } else {
             speed = 2;
         }
 
-        // Горизонтальное движение
+        // Horizontal movement
         if (keys.contains(KeyEvent.VK_LEFT)) {
             x -= speed;
             moving = true;
+            currentDirection = Direction.LEFT;
+            lastDirection = Direction.LEFT;
         }
         if (keys.contains(KeyEvent.VK_RIGHT)) {
             x += speed;
             moving = true;
+            currentDirection = Direction.RIGHT;
+            lastDirection = Direction.RIGHT;
         }
 
         // Прыжок, если не в воздухе
@@ -126,7 +178,55 @@ public class Player extends Entity {
     // В этом базовом методе мы уже не рендерим никаких кадров:
     public void render(int[] pixels, int screenW, int screenH) {
         // Может остаться пустым, или общая «заглушка».
+
     }
 
-    // TODO: Health reducing
+    // Add getters for health
+    public int getHealth() {
+        return health;
+    }
+
+    public int getMaxHealth() {
+        return maxHealth;
+    }
+
+    public void takeDamage(int damage, int attackerX) {
+        health -= damage;
+        if (health < 0)
+            health = 0;
+
+        // Trigger hit effect
+        isHit = true;
+        hitFlashFrames = HIT_FLASH_DURATION;
+
+        applyKnockback(attackerX); // Your existing knockback logic
+    }
+
+    private void applyKnockback(int attackerX) {
+        // Determine knockback direction (away from attacker)
+        int knockbackDirection = (x < attackerX) ? -1 : 1;
+
+        // Set initial knockback velocities
+        knockbackVelocityX = knockbackDirection * 8f; // Initial horizontal speed
+        jumpVelocity = -5f; // Stronger vertical launch
+        knockbackAccelerationX = -knockbackDirection * 0.5f; // Deceleration in opposite direction
+
+        jumping = true;
+        inKnockback = true;
+
+    }
+
+    // Optionally add a heal method
+    public void heal(int amount) {
+        health += amount;
+        if (health > maxHealth) {
+            health = maxHealth;
+        }
+        System.out.println("Player healed " + amount + " health! Health: " + health + "/" + maxHealth);
+    }
+
+    public boolean isAlive() {
+        return health > 0;
+    }
+
 }

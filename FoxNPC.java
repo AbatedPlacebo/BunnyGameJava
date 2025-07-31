@@ -7,16 +7,17 @@ public class FoxNPC extends Entity {
     }
 
     private enum State {
-        PATROL, IDLE, ATTACK
+        PATROL, IDLE, ATTACK, TOPATROLPOSITION
     }
 
     private State state = State.PATROL;
 
     private Direction currentDirection = Direction.RIGHT;
-    private boolean isIdle = false;
 
     private int dir = 1, speed = 1;
     private int patrolMinX, patrolMaxX;
+    private int targetPatrolX; // The patrol point we're moving toward
+    private static final int PATROL_THRESHOLD = 5; // How close we need to be to consider position reached
     private int idleCounter = 0;
     private final int idleTime = 120; // ~1 second if 60 FPS
     private final int detectionRange = 100;
@@ -43,19 +44,21 @@ public class FoxNPC extends Entity {
     @Override
     public void update(Set<Integer> keys) {
         int playerX = player.getX();
+        int playerY = player.getY();
         int distToPlayer = Math.abs(playerX - x);
 
-        // Enter attack mode if close enough
+        // State transitions
         if (distToPlayer <= detectionRange) {
             state = State.ATTACK;
         } else if (state == State.ATTACK) {
-            // Return to patrol when player escapes
-            state = State.PATROL;
+            // When leaving attack mode, find nearest patrol point
+            state = State.TOPATROLPOSITION;
+            targetPatrolX = findNearestPatrolPoint();
         }
 
         switch (state) {
             case ATTACK:
-                attackPlayer(playerX);
+                attackPlayer(playerX, playerY);
                 break;
 
             case PATROL:
@@ -70,6 +73,10 @@ public class FoxNPC extends Entity {
                     dir *= -1;
                 }
                 break;
+
+            case TOPATROLPOSITION:
+                moveToPatrolPosition();
+                break;
         }
 
         animationTick++;
@@ -78,11 +85,43 @@ public class FoxNPC extends Entity {
         }
     }
 
+    private int findNearestPatrolPoint() {
+        // Find which patrol boundary is closer
+        int distToMin = Math.abs(x - patrolMinX);
+        int distToMax = Math.abs(x - patrolMaxX);
+
+        return (distToMin < distToMax) ? patrolMinX : patrolMaxX;
+    }
+
+    private void moveToPatrolPosition() {
+        // Move toward target position
+        if (x < targetPatrolX) {
+            x += speed;
+            currentDirection = Direction.RIGHT;
+        } else if (x > targetPatrolX) {
+            x -= speed;
+            currentDirection = Direction.LEFT;
+        }
+
+        // Check if we've reached the position
+        if (Math.abs(x - targetPatrolX) <= PATROL_THRESHOLD) {
+            x = targetPatrolX; // Snap to exact position
+            state = State.IDLE; // Transition to idle before continuing patrol
+            idleCounter = 0;
+            animationFrame = 0;
+            animationTick = 0;
+
+            // Set patrol direction based on which boundary we're at
+            dir = (targetPatrolX == patrolMinX) ? 1 : -1;
+        }
+    }
+
     private void patrol() {
         x += dir * speed;
         currentDirection = dir > 0 ? Direction.RIGHT : Direction.LEFT;
 
         if (x < patrolMinX || x > patrolMaxX) {
+            // When hitting patrol boundary, go to idle
             x = Math.max(patrolMinX, Math.min(x, patrolMaxX));
             state = State.IDLE;
             animationFrame = 0;
@@ -90,8 +129,8 @@ public class FoxNPC extends Entity {
         }
     }
 
-    private void attackPlayer(int playerX) {
-        // Move toward the player
+    private void attackPlayer(int playerX, int playerY) {
+        // Move toward the player horizontally
         if (x < playerX) {
             x += speed;
             currentDirection = Direction.RIGHT;
@@ -100,10 +139,20 @@ public class FoxNPC extends Entity {
             currentDirection = Direction.LEFT;
         }
 
-        // Optional: implement damage logic if close enough
-        int distance = Math.abs(playerX - x);
-        if (distance < 10) {
-            // player.takeDamage(1); // You must define takeDamage in Player
+        // // Optional: Move toward the player vertically (if needed)
+        // if (y < playerY) {
+        // y += speed;
+        // } else if (y > playerY) {
+        // y -= speed;
+        // }
+
+        // Check distance in both X and Y dimensions
+        int xDistance = Math.abs(playerX - x);
+        int yDistance = Math.abs(playerY - y);
+
+        // Attack if close enough in both dimensions
+        if (xDistance < 10 && yDistance < 20) { // Adjust thresholds as needed
+            player.takeDamage(1, x); // Pass attacker's X position for knockback
         }
     }
 
