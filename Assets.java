@@ -11,7 +11,7 @@ public class Assets {
                 "/sprites/bunny.png", // путь внутри JAR/resources
                 32, 32);
         foxSheet = new SpriteSheet(
-                "/sprites/fox.png", // путь внутри JAR/resources
-                32, 32);
+                "/sprites/fox2.png", // путь внутри JAR/resources
+                48, 48);
     }
 }

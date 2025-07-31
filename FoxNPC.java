@@ -36,8 +36,8 @@ public class FoxNPC extends Entity {
         this.player = player;
 
         idleRight = sheet.getRow(0);
-        walkRight = sheet.getRow(1);
-        walkLeft = sheet.getRow(2);
+        walkRight = sheet.getRow(2);
+        walkLeft = sheet.getRow(1);
         idleLeft = sheet.getRow(3);
     }
 
