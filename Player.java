@@ -1,5 +1,5 @@
-import java.awt.Color;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.util.Set;
 
 public class Player extends Entity {
@@ -12,6 +12,7 @@ public class Player extends Entity {
     private boolean wasMoving = false;
     private boolean moving = false;
     private boolean jumping = false;
+
     private float jumpVelocity = 0;
     private final double gravity = 0.2;
     private final int jumpStrength = -4;
@@ -227,6 +228,29 @@ public class Player extends Entity {
 
     public boolean isAlive() {
         return health > 0;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public BufferedImage getCurrentFrame() {
+        if (sheet == null)
+            return null;
+
+        int frameIndex = animationFrame % 4;
+        return (lastDirection == Direction.RIGHT)
+                ? sheet.getFrame(0, frameIndex)
+                : sheet.getFrame(1, frameIndex); // допустим, 0 — вправо, 1 — влево
+    }
+
+    public void setJumping(boolean jumping) {
+        jumpVelocity = -3;
+        this.jumping = jumping;
     }
 
 }

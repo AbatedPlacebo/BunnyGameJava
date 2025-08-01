@@ -13,6 +13,7 @@ import javax.imageio.ImageIO;
 public class SpriteSheet {
     private final BufferedImage sheet;
     private final int frameWidth, frameHeight;
+
     private final int cols, rows;
     private final int[] sheetPixels;
 
@@ -101,5 +102,13 @@ public class SpriteSheet {
                 }
             }
         }
+    }
+
+    public int getFrameHeight() {
+        return frameHeight;
+    }
+
+    public int getFrameWidth() {
+        return frameWidth;
     }
 }

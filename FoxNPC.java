@@ -21,6 +21,8 @@ public class FoxNPC extends Entity {
     private int idleCounter = 0;
     private final int idleTime = 120; // ~1 second if 60 FPS
     private final int detectionRange = 100;
+    private int attackCooldown = 0; // в кадрах
+    private boolean isAlive = true;
 
     private final BufferedImage[] walkRight;
     private final BufferedImage[] walkLeft;
@@ -43,6 +45,9 @@ public class FoxNPC extends Entity {
 
     @Override
     public void update(Set<Integer> keys) {
+        if (!isAlive)
+            return;
+
         int playerX = player.getX();
         int playerY = player.getY();
         int distToPlayer = Math.abs(playerX - x);
@@ -58,7 +63,7 @@ public class FoxNPC extends Entity {
 
         switch (state) {
             case ATTACK:
-                attackPlayer(playerX, playerY);
+                attackPlayer(player);
                 break;
 
             case PATROL:
@@ -83,6 +88,10 @@ public class FoxNPC extends Entity {
         if (animationTick % 10 == 0) {
             animationFrame = (animationFrame + 1) % 4;
         }
+        if (attackCooldown > 0) {
+            attackCooldown--;
+        }
+
     }
 
     private int findNearestPatrolPoint() {
@@ -129,36 +138,49 @@ public class FoxNPC extends Entity {
         }
     }
 
-    private void attackPlayer(int playerX, int playerY) {
-        // Move toward the player horizontally
-        if (x < playerX) {
+    private void attackPlayer(Player player) {
+        if (x < player.getX()) {
             x += speed;
             currentDirection = Direction.RIGHT;
-        } else if (x > playerX) {
+        } else if (x > player.getX()) {
             x -= speed;
             currentDirection = Direction.LEFT;
         }
 
-        // // Optional: Move toward the player vertically (if needed)
-        // if (y < playerY) {
-        // y += speed;
-        // } else if (y > playerY) {
-        // y -= speed;
-        // }
+        if (attackCooldown > 0)
+            return;
 
-        // Check distance in both X and Y dimensions
-        int xDistance = Math.abs(playerX - x);
-        int yDistance = Math.abs(playerY - y);
+        // Сначала грубая проверка пересечения прямоугольников
+        if (x < player.getX() + player.getWidth() &&
+                x + width > player.getX() &&
+                y < player.getY() + player.getHeight() &&
+                y + height > player.getY()) {
 
-        // Attack if close enough in both dimensions
-        if (xDistance < 10 && yDistance < 20) { // Adjust thresholds as needed
-            player.takeDamage(1, x); // Pass attacker's X position for knockback
+            BufferedImage foxFrame = (currentDirection == Direction.RIGHT)
+                    ? walkRight[animationFrame % walkRight.length]
+                    : walkLeft[animationFrame % walkLeft.length];
+
+            BufferedImage playerFrame = player.getCurrentFrame();
+
+            if (playerFrame != null
+                    && pixelPerfectCollision(foxFrame, x, y, playerFrame, player.getX(), player.getY())) {
+                if (player.getY() + player.getHeight() <= y + height) {
+                    // Игрок сверху — лиса умирает
+                    player.setJumping(true);
+                    isAlive = false;
+                    return;
+                }
+                player.takeDamage(1, x);
+                attackCooldown = 60; // Cooldown in frames
+            }
         }
+
     }
 
     @Override
     public void render(int[] pixels, int screenW, int screenH) {
         BufferedImage img;
+          if (!isAlive) return;
 
         switch (state) {
             case ATTACK:
@@ -182,4 +204,34 @@ public class FoxNPC extends Entity {
 
         Sprite.drawImage(pixels, screenW, screenH, x, y, img);
     }
+
+    private boolean pixelPerfectCollision(BufferedImage aImage, int ax, int ay,
+            BufferedImage bImage, int bx, int by) {
+        int aWidth = aImage.getWidth();
+        int aHeight = aImage.getHeight();
+        int bWidth = bImage.getWidth();
+        int bHeight = bImage.getHeight();
+
+        int startX = Math.max(ax, bx);
+        int startY = Math.max(ay, by);
+        int endX = Math.min(ax + aWidth, bx + bWidth);
+        int endY = Math.min(ay + aHeight, by + bHeight);
+
+        for (int y = startY; y < endY; y++) {
+            for (int x = startX; x < endX; x++) {
+                int aPixel = aImage.getRGB(x - ax, y - ay);
+                int bPixel = bImage.getRGB(x - bx, y - by);
+
+                if (((aPixel >>> 24) != 0) && ((bPixel >>> 24) != 0)) {
+                    return true; // обоих пикселей есть непрозрачность — столкновение
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean isAlive() {
+        return isAlive;
+    }
+
 }
