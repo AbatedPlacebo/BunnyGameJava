@@ -16,7 +16,7 @@ public class Player extends Entity {
     private float jumpVelocity = 0;
     private final double gravity = 0.2;
     private final int jumpStrength = -4;
-    private final int groundY = 125; // можно передавать или вычислять в будущем
+    private final int groundY = 160; // можно передавать или вычислять в будущем
     private int speed = 2;
     private int health = 100; // Default health value
     private int maxHealth = 100;
@@ -176,10 +176,53 @@ public class Player extends Entity {
             animationFrame++;
     }
 
-    // В этом базовом методе мы уже не рендерим никаких кадров:
-    public void render(int[] pixels, int screenW, int screenH) {
-        // Может остаться пустым, или общая «заглушка».
+    protected BufferedImage createRedTintFrame(BufferedImage original) {
+        BufferedImage tinted = new BufferedImage(original.getWidth(), original.getHeight(),
+                BufferedImage.TYPE_INT_ARGB);
+        float intensity = (float) hitFlashFrames / HIT_FLASH_DURATION;
 
+        for (int y = 0; y < original.getHeight(); y++) {
+            for (int x = 0; x < original.getWidth(); x++) {
+                int pixel = original.getRGB(x, y);
+                if ((pixel >> 24) != 0x00) {
+                    int a = (pixel >> 24) & 0xff;
+                    int r = (pixel >> 16) & 0xff;
+                    int g = (pixel >> 8) & 0xff;
+                    int b = pixel & 0xff;
+
+                    r = Math.min(255, r + (int) (100 * intensity));
+                    g = (int) (g * (1 - intensity * 0.7f));
+                    b = (int) (b * (1 - intensity * 0.7f));
+
+                    tinted.setRGB(x, y, (a << 24) | (r << 16) | (g << 8) | b);
+                } else {
+                    tinted.setRGB(x, y, pixel);
+                }
+            }
+        }
+        return tinted;
+    }
+
+    @Override
+    public void render(int[] pixels, int screenW, int screenH) {
+        BufferedImage img = getCurrentFrame();
+        if (img == null)
+            return;
+
+        int drawX = x;
+        int drawY = getY() - img.getHeight(); // выравнивание по ногам
+
+        // Draw base sprite
+        Sprite.drawImage(pixels, screenW, screenH, drawX, drawY, img);
+
+        // Draw hit effect overlay
+        if (isHit && hitFlashFrames > 0) {
+            BufferedImage redFrame = createRedTintFrame(img);
+            Sprite.drawImage(pixels, screenW, screenH, drawX, drawY, redFrame);
+            hitFlashFrames--;
+            if (hitFlashFrames <= 0)
+                isHit = false;
+        }
     }
 
     // Add getters for health
@@ -238,19 +281,23 @@ public class Player extends Entity {
         return height;
     }
 
-    public BufferedImage getCurrentFrame() {
-        if (sheet == null)
-            return null;
-
-        int frameIndex = animationFrame % 4;
-        return (lastDirection == Direction.RIGHT)
-                ? sheet.getFrame(0, frameIndex)
-                : sheet.getFrame(1, frameIndex); // допустим, 0 — вправо, 1 — влево
-    }
-
     public void setJumping(boolean jumping) {
         jumpVelocity = -3;
         this.jumping = jumping;
+    }
+
+    @Override
+    public BufferedImage getCurrentFrame() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getCurrentFrame'");
+    }
+
+    public int getTop() {
+        return getY() - getHeight();
+    }
+
+    public int getBottom() {
+        return getY();
     }
 
 }

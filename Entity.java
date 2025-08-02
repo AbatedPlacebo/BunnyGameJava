@@ -1,3 +1,4 @@
+import java.awt.image.BufferedImage;
 import java.util.Set;
 
 public abstract class Entity {
@@ -19,4 +20,6 @@ public abstract class Entity {
 
     // Draw yourself to the pixel buffer
     public abstract void render(int[] pixels, int screenW, int screenH);
+
+    public abstract BufferedImage getCurrentFrame();
 }

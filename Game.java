@@ -40,7 +40,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
         addKeyListener(this);
         currentLevel = new Level("/maps/LevelA.png"); // assumes in resources
         entities.add(player);
-        entities.add(new FoxNPC(200, 110, 150, 300, player));
+        entities.add(new FoxNPC(200, 160, 150, 300, player));
     }
 
     public void start() {
@@ -70,9 +70,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
                 e.render(pixels, width, height);
             }
         } else {
-            for (int i = 0; i < pixels.length; i++) {
-                pixels[i] = 0xFFFFFF; // menu background
-            }
+            currentLevel.render(pixels, width, height);
         }
     }
 
@@ -85,8 +83,11 @@ public class Game extends JPanel implements Runnable, KeyListener {
             g.setColor(Color.BLACK);
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Brown Rabbit Adventure", 40, 80);
-            g.setFont(new Font("Arial", Font.PLAIN, 16));
+            g.setFont(new Font("Arial", Font.BOLD, 16));
             g.drawString("Press ENTER to Start", 90, 130);
+        }
+        if (gameState == GameState.PLAYING) {
+            drawHealthBar(g);
         }
     }
 
@@ -122,5 +123,34 @@ public class Game extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyTyped(KeyEvent e) {
     } // unused
+
+    private void drawHealthBar(Graphics g) {
+        int health = player.getHealth(); // Assuming getter exists
+        int maxHealth = player.getMaxHealth(); // Assuming getter exists
+
+        int barWidth = 200;
+        int barHeight = 20;
+        int x = 20;
+        int y = 20;
+
+        int filledWidth = (int) ((health / (double) maxHealth) * barWidth);
+
+        // Background
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(x, y, barWidth, barHeight);
+
+        // Health Fill
+        g.setColor(Color.RED);
+        g.fillRect(x, y, filledWidth, barHeight);
+
+        // Border
+        g.setColor(Color.BLACK);
+        g.drawRect(x, y, barWidth, barHeight);
+
+        // Text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 14));
+        g.drawString("HP: " + health + " / " + maxHealth, x + 5, y + 15);
+    }
 
 }

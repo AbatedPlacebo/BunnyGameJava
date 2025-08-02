@@ -49,7 +49,6 @@ public class FoxNPC extends Entity {
             return;
 
         int playerX = player.getX();
-        int playerY = player.getY();
         int distToPlayer = Math.abs(playerX - x);
 
         // State transitions
@@ -150,6 +149,9 @@ public class FoxNPC extends Entity {
         if (attackCooldown > 0)
             return;
 
+        // Проверка: игрок сверху (только если нижняя часть игрока над верхней частью
+        // лисы)
+
         // Сначала грубая проверка пересечения прямоугольников
         if (x < player.getX() + player.getWidth() &&
                 x + width > player.getX() &&
@@ -161,15 +163,19 @@ public class FoxNPC extends Entity {
                     : walkLeft[animationFrame % walkLeft.length];
 
             BufferedImage playerFrame = player.getCurrentFrame();
+            int foxTop = y - foxFrame.getHeight() + foxFrame.getHeight() / 2;
+            int playerBottom = player.getY();
+
+            // Проверка: игрок сверху (только если нижняя часть игрока над верхней частью
+            // лисы)
+            if (playerBottom <= foxTop) {
+                player.setJumping(true);
+                isAlive = false;
+                return;
+            }
 
             if (playerFrame != null
                     && pixelPerfectCollision(foxFrame, x, y, playerFrame, player.getX(), player.getY())) {
-                if (player.getY() + player.getHeight() <= y + height) {
-                    // Игрок сверху — лиса умирает
-                    player.setJumping(true);
-                    isAlive = false;
-                    return;
-                }
                 player.takeDamage(1, x);
                 attackCooldown = 60; // Cooldown in frames
             }
@@ -180,7 +186,8 @@ public class FoxNPC extends Entity {
     @Override
     public void render(int[] pixels, int screenW, int screenH) {
         BufferedImage img;
-          if (!isAlive) return;
+        if (!isAlive)
+            return;
 
         switch (state) {
             case ATTACK:
@@ -202,7 +209,7 @@ public class FoxNPC extends Entity {
                 break;
         }
 
-        Sprite.drawImage(pixels, screenW, screenH, x, y, img);
+        Sprite.drawImage(pixels, screenW, screenH, x, y - height, img);
     }
 
     private boolean pixelPerfectCollision(BufferedImage aImage, int ax, int ay,
@@ -234,4 +241,17 @@ public class FoxNPC extends Entity {
         return isAlive;
     }
 
+    @Override
+    public BufferedImage getCurrentFrame() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getCurrentFrame'");
+    }
+
+    public int getTop() {
+        return y - height;
+    }
+
+    public int getBottom() {
+        return y;
+    }
 }
