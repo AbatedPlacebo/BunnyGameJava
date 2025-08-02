@@ -2,7 +2,7 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.Set;
 
-public class Player extends Entity {
+public abstract class Player extends Entity {
     private ActionStrategy actionStrategy;
     private MissStrategy missStrategy;
 
@@ -16,7 +16,7 @@ public class Player extends Entity {
     private float jumpVelocity = 0;
     private final double gravity = 0.2;
     private final int jumpStrength = -4;
-    private final int groundY = 160; // можно передавать или вычислять в будущем
+    private int groundY = 160; // можно передавать или вычислять в будущем
     private int speed = 2;
     private int health = 100; // Default health value
     private int maxHealth = 100;
@@ -33,7 +33,7 @@ public class Player extends Entity {
     protected final SpriteSheet sheet; // <- храним здесь
 
     protected enum Direction {
-        NONE, LEFT, RIGHT
+        LEFT, RIGHT
     }
 
     protected Direction currentDirection = Direction.RIGHT;
@@ -72,11 +72,11 @@ public class Player extends Entity {
         this.sheet = sheet;
     }
 
-    protected int getX() {
+    public int getX() {
         return x;
     }
 
-    protected int getY() {
+    public int getY() {
         return y;
     }
 
@@ -281,15 +281,9 @@ public class Player extends Entity {
         return height;
     }
 
-    public void setJumping(boolean jumping) {
+    public void triggerJump() {
         jumpVelocity = -3;
-        this.jumping = jumping;
-    }
-
-    @Override
-    public BufferedImage getCurrentFrame() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCurrentFrame'");
+        this.jumping = true;
     }
 
     public int getTop() {

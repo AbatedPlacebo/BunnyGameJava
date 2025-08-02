@@ -1,4 +1,7 @@
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.awt.image.BufferedImage;
 
 public class FoxNPC extends Entity {
@@ -28,6 +31,9 @@ public class FoxNPC extends Entity {
     private final BufferedImage[] walkLeft;
     private final BufferedImage[] idleRight;
     private final BufferedImage[] idleLeft;
+
+    private List<Particle> particles = new ArrayList<>();
+    private boolean isDying = false;
 
     private Player player;
 
@@ -169,8 +175,8 @@ public class FoxNPC extends Entity {
             // Проверка: игрок сверху (только если нижняя часть игрока над верхней частью
             // лисы)
             if (playerBottom <= foxTop) {
-                player.setJumping(true);
-                isAlive = false;
+                player.triggerJump();
+                die();
                 return;
             }
 
@@ -185,6 +191,23 @@ public class FoxNPC extends Entity {
 
     @Override
     public void render(int[] pixels, int screenW, int screenH) {
+        if (isDying) {
+            Iterator<Particle> iterator = particles.iterator();
+            while (iterator.hasNext()) {
+                Particle p = iterator.next();
+                p.update();
+                p.render(pixels, screenW, screenH);
+                if (p.isDead()) {
+                    iterator.remove();
+                }
+            }
+            // Если все частицы исчезли — полностью удалить моба
+            if (particles.isEmpty()) {
+                // Например, установить флаг для удаления из игрового мира
+            }
+            return;
+        }
+
         BufferedImage img;
         if (!isAlive)
             return;
@@ -254,4 +277,19 @@ public class FoxNPC extends Entity {
     public int getBottom() {
         return y;
     }
+
+    public void die() {
+        isAlive = false;
+        isDying = true;
+
+        BufferedImage baseImage = (currentDirection == Direction.RIGHT)
+                ? idleRight[0]
+                : idleLeft[0];
+
+        // Создание 50 частиц
+        for (int i = 0; i < 50; i++) {
+            particles.add(new Particle(x, getTop(), baseImage));
+        }
+    }
+
 }
