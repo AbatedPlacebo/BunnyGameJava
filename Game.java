@@ -14,6 +14,8 @@ public class Game extends JPanel implements Runnable, KeyListener {
     private final int width = 353;
     private final int height = 180;
     private final int scale = 4; // Scale factor (2x -> 640x480)
+    private int fadeAlpha = 0;
+    private final int fadeSpeed = 3; // Controls fade speed (1–10 range is good)
 
     private final BufferedImage image;
     private final int[] pixels;
@@ -26,7 +28,8 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
     private enum GameState {
         MAIN_MENU,
-        PLAYING
+        PLAYING,
+        GAME_OVER
     }
 
     private GameState gameState = GameState.MAIN_MENU;
@@ -63,14 +66,22 @@ public class Game extends JPanel implements Runnable, KeyListener {
     }
 
     private void update() {
+        currentLevel.render(pixels, width, height);
+
         if (gameState == GameState.PLAYING) {
-            currentLevel.render(pixels, width, height);
             for (Entity e : entities) {
                 e.update(keys);
                 e.render(pixels, width, height);
             }
-        } else {
-            currentLevel.render(pixels, width, height);
+
+            if (player.getHealth() <= 0) {
+                gameState = GameState.GAME_OVER;
+                fadeAlpha = 0; // Reset fade
+            }
+        } else if (gameState == GameState.GAME_OVER) {
+            if (fadeAlpha < 255) {
+                fadeAlpha = Math.min(255, fadeAlpha + fadeSpeed);
+            }
         }
     }
 
@@ -85,9 +96,22 @@ public class Game extends JPanel implements Runnable, KeyListener {
             g.drawString("Brown Rabbit Adventure", 40, 80);
             g.setFont(new Font("Arial", Font.BOLD, 16));
             g.drawString("Press ENTER to Start", 90, 130);
-        }
-        if (gameState == GameState.PLAYING) {
+        } else if (gameState == GameState.PLAYING) {
             drawHealthBar(g);
+        } else if (gameState == GameState.GAME_OVER) {
+            // Semi-transparent black overlay
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setColor(new Color(0, 0, 0, fadeAlpha));
+            g2d.fillRect(0, 0, width * scale, height * scale);
+
+            // Only show text once fully faded in
+            if (fadeAlpha >= 200) {
+                g.setColor(Color.WHITE);
+                g.setFont(new Font("Arial", Font.BOLD, 32));
+                g.drawString("Game Over", 100, 80);
+                g.setFont(new Font("Arial", Font.BOLD, 16));
+                g.drawString("Press R to Restart", 100, 130);
+            }
         }
     }
 
@@ -112,7 +136,8 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
         if (gameState == GameState.MAIN_MENU && e.getKeyCode() == KeyEvent.VK_ENTER) {
             gameState = GameState.PLAYING;
-        } else if (gameState == GameState.PLAYING && e.getKeyCode() == KeyEvent.VK_R) {
+        } else if ((gameState == GameState.PLAYING || gameState == GameState.GAME_OVER)
+                && e.getKeyCode() == KeyEvent.VK_R) {
             restartGame();
         }
     }
@@ -156,19 +181,13 @@ public class Game extends JPanel implements Runnable, KeyListener {
     }
 
     private void restartGame() {
-        // Reset level
         currentLevel = new Level("/maps/LevelA.png");
-
-        // Reset player
         player = new BrownRabbitPlayer(new WarriorAction(), new WarriorMissChance());
-
-        // Reset entities
         entities.clear();
         entities.add(player);
         entities.add(new FoxNPC(200, 160, 150, 300, player));
-
-        // Set game state
         gameState = GameState.PLAYING;
+        fadeAlpha = 0;
     }
 
 }

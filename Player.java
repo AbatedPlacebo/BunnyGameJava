@@ -18,8 +18,8 @@ public abstract class Player extends Entity {
     private final int jumpStrength = -4;
     private int groundY = 160; // можно передавать или вычислять в будущем
     private int speed = 2;
-    private int health = 100; // Default health value
-    private int maxHealth = 100;
+    private int health = 10; // Default health value
+    private int maxHealth = 10;
 
     // Add these fields to your Player class
     private float knockbackVelocityX = 0;

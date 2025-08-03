@@ -266,7 +266,6 @@ public class FoxNPC extends Entity {
 
     @Override
     public BufferedImage getCurrentFrame() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getCurrentFrame'");
     }
 
