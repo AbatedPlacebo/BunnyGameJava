@@ -112,6 +112,8 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
         if (gameState == GameState.MAIN_MENU && e.getKeyCode() == KeyEvent.VK_ENTER) {
             gameState = GameState.PLAYING;
+        } else if (gameState == GameState.PLAYING && e.getKeyCode() == KeyEvent.VK_R) {
+            restartGame();
         }
     }
 
@@ -151,6 +153,22 @@ public class Game extends JPanel implements Runnable, KeyListener {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 14));
         g.drawString("HP: " + health + " / " + maxHealth, x + 5, y + 15);
+    }
+
+    private void restartGame() {
+        // Reset level
+        currentLevel = new Level("/maps/LevelA.png");
+
+        // Reset player
+        player = new BrownRabbitPlayer(new WarriorAction(), new WarriorMissChance());
+
+        // Reset entities
+        entities.clear();
+        entities.add(player);
+        entities.add(new FoxNPC(200, 160, 150, 300, player));
+
+        // Set game state
+        gameState = GameState.PLAYING;
     }
 
 }
