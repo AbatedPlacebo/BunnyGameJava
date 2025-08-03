@@ -229,9 +229,7 @@ public class FoxNPC extends Entity {
                 img = (currentDirection == Direction.RIGHT)
                         ? walkRight[animationFrame % walkRight.length]
                         : walkLeft[animationFrame % walkLeft.length];
-                break;
-        }
-
+                break; }
         Sprite.drawImage(pixels, screenW, screenH, x, y - height, img);
     }
 

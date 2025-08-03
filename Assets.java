@@ -1,6 +1,7 @@
 public class Assets {
     public static SpriteSheet brownRabbitSheet;
     public static SpriteSheet foxSheet;
+    public static SpriteSheet blockSheet;
     // … другие спрайт‑шиты
 
     /**
@@ -13,5 +14,8 @@ public class Assets {
         foxSheet = new SpriteSheet(
                 "/sprites/fox2.png", // путь внутри JAR/resources
                 48, 48);
+        blockSheet = new SpriteSheet(
+                "/sprites/block.png", // путь внутри JAR/resources
+                64, 12);
     }
 }

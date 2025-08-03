@@ -11,8 +11,10 @@ public abstract class Entity {
         this.x = startX;
         this.y = startY;
         this.sheet = sheet;
-        this.width = sheet.getFrameWidth(); // предполагается метод, возвращающий ширину спрайта
-        this.height = sheet.getFrameHeight(); // предполагается метод, возвращающий высоту спрайта
+        if (sheet != null) {
+            this.width = sheet.getFrameWidth(); // предполагается метод, возвращающий ширину спрайта
+            this.height = sheet.getFrameHeight(); // предполагается метод, возвращающий высоту спрайта
+        }
     }
 
     // Called every tick to update position, AI, etc.

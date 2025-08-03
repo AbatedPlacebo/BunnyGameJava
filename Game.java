@@ -22,6 +22,8 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
     private Level currentLevel;
 
+    private final List<Block> blocks = new ArrayList<>();
+
     private Player player = new BrownRabbitPlayer(new WarriorAction(), new WarriorMissChance());
 
     private final List<Entity> entities = new ArrayList<>();
@@ -44,6 +46,9 @@ public class Game extends JPanel implements Runnable, KeyListener {
         currentLevel = new Level("/maps/LevelA.png"); // assumes in resources
         entities.add(player);
         entities.add(new FoxNPC(200, 160, 150, 300, player));
+        blocks.clear();
+        blocks.add(new Block(100, 140)); // Пример платформы
+        blocks.add(new Block(200, 100)); // Ещё одна
     }
 
     public void start() {
@@ -71,7 +76,11 @@ public class Game extends JPanel implements Runnable, KeyListener {
         if (gameState == GameState.PLAYING) {
             for (Entity e : entities) {
                 e.update(keys);
+                player.checkBlockCollision(blocks);
                 e.render(pixels, width, height);
+                for (Block block : blocks) {
+                    block.render(pixels, width, height);
+                }
             }
 
             if (player.getHealth() <= 0) {
@@ -186,6 +195,9 @@ public class Game extends JPanel implements Runnable, KeyListener {
         entities.clear();
         entities.add(player);
         entities.add(new FoxNPC(200, 160, 150, 300, player));
+        blocks.clear();
+        blocks.add(new Block(100, 140)); // Пример платформы
+        blocks.add(new Block(200, 100)); // Ещё одна
         gameState = GameState.PLAYING;
         fadeAlpha = 0;
     }

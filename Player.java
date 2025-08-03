@@ -1,5 +1,7 @@
+import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.util.List;
 import java.util.Set;
 
 public abstract class Player extends Entity {
@@ -146,7 +148,8 @@ public abstract class Player extends Entity {
         }
 
         // Прыжок, если не в воздухе
-        if ((keys.contains(KeyEvent.VK_UP) || keys.contains(KeyEvent.VK_SPACE)) && !jumping && isOnGround()) {
+        if ((keys.contains(KeyEvent.VK_UP) || keys.contains(KeyEvent.VK_SPACE)) &&
+                !jumping) {
             jumping = true;
             jumpVelocity = jumpStrength;
             moving = true;
@@ -292,6 +295,47 @@ public abstract class Player extends Entity {
 
     public int getBottom() {
         return getY();
+    }
+
+    public void checkBlockCollision(List<Block> blocks) {
+        Rectangle playerBounds = new Rectangle(x, y - getHeight(), getWidth(), getHeight());
+        boolean onPlatform = false;
+
+        for (Block block : blocks) {
+            Rectangle blockBounds = block.getBounds();
+
+            if (playerBounds.intersects(blockBounds)) {
+                Rectangle intersection = playerBounds.intersection(blockBounds);
+
+                if (intersection.height < intersection.width) {
+                    if (playerBounds.y < blockBounds.y) {
+                        // Приземление сверху
+                        y = blockBounds.y;
+                        jumpVelocity = 0;
+                        jumping = false;
+                        onPlatform = true;
+                    } else {
+                        // Удар снизу
+                        y = blockBounds.y + blockBounds.height + getHeight();
+                        jumpVelocity = 0;
+                    }
+                } else {
+                    // Сбоку — ограничиваем в зависимости от направления
+                    if (x < blockBounds.x) {
+                        x = blockBounds.x - getWidth();
+                    } else {
+                        x = blockBounds.x + blockBounds.width;
+                    }
+                }
+            }
+        }
+
+        // Если стоим на платформе, не надо применять гравитацию
+        if (onPlatform) {
+            groundY = y; // установить текущую платформу как «землю»
+        } else {
+            groundY = 160; // базовая земля
+        }
     }
 
 }
