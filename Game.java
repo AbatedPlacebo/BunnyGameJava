@@ -1,9 +1,15 @@
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -28,6 +34,8 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
     private final List<Entity> entities = new ArrayList<>();
 
+    private Clip bgMusic;
+
     private enum GameState {
         MAIN_MENU,
         PLAYING,
@@ -43,6 +51,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
         setFocusable(true);
         requestFocusInWindow();
         addKeyListener(this);
+        loadMusic("/audio/background.wav");
         currentLevel = new Level("/maps/LevelA.png"); // assumes in resources
         entities.add(player);
         entities.add(new FoxNPC(200, 160, 150, 300, player));
@@ -74,6 +83,9 @@ public class Game extends JPanel implements Runnable, KeyListener {
         currentLevel.render(pixels, width, height);
 
         if (gameState == GameState.PLAYING) {
+            if (bgMusic != null && !bgMusic.isRunning()) {
+                bgMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            }
             for (Entity e : entities) {
                 e.update(keys);
                 player.checkBlockCollision(blocks);
@@ -86,8 +98,10 @@ public class Game extends JPanel implements Runnable, KeyListener {
             if (player.getHealth() <= 0) {
                 gameState = GameState.GAME_OVER;
                 fadeAlpha = 0; // Reset fade
+                stopMusic();
             }
         } else if (gameState == GameState.GAME_OVER) {
+            stopMusic();
             if (fadeAlpha < 255) {
                 fadeAlpha = Math.min(255, fadeAlpha + fadeSpeed);
             }
@@ -202,4 +216,18 @@ public class Game extends JPanel implements Runnable, KeyListener {
         fadeAlpha = 0;
     }
 
+        private void loadMusic(String path) {
+        try (AudioInputStream ais = AudioSystem.getAudioInputStream(getClass().getResource(path))) {
+            bgMusic = AudioSystem.getClip();
+            bgMusic.open(ais);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void stopMusic() {
+        if (bgMusic != null && bgMusic.isRunning()) {
+            bgMusic.stop();
+        }
+    }
 }

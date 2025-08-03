@@ -191,22 +191,6 @@ public class FoxNPC extends Entity {
 
     @Override
     public void render(int[] pixels, int screenW, int screenH) {
-        if (isDying) {
-            Iterator<Particle> iterator = particles.iterator();
-            while (iterator.hasNext()) {
-                Particle p = iterator.next();
-                p.update();
-                p.render(pixels, screenW, screenH);
-                if (p.isDead()) {
-                    iterator.remove();
-                }
-            }
-            // Если все частицы исчезли — полностью удалить моба
-            if (particles.isEmpty()) {
-                // Например, установить флаг для удаления из игрового мира
-            }
-            return;
-        }
 
         BufferedImage img;
         if (!isAlive)
@@ -229,7 +213,8 @@ public class FoxNPC extends Entity {
                 img = (currentDirection == Direction.RIGHT)
                         ? walkRight[animationFrame % walkRight.length]
                         : walkLeft[animationFrame % walkLeft.length];
-                break; }
+                break;
+        }
         Sprite.drawImage(pixels, screenW, screenH, x, y - height, img);
     }
 
