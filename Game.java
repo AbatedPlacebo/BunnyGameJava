@@ -216,7 +216,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
         fadeAlpha = 0;
     }
 
-        private void loadMusic(String path) {
+    private void loadMusic(String path) {
         try (AudioInputStream ais = AudioSystem.getAudioInputStream(getClass().getResource(path))) {
             bgMusic = AudioSystem.getClip();
             bgMusic.open(ais);

@@ -9,6 +9,7 @@ public abstract class Player extends Entity {
     private MissStrategy missStrategy;
 
     private int x = 100, y = 100;
+    private int prevY;
     private int animationFrame = 0;
     private int animationTick = 0;
     private boolean wasMoving = false;
@@ -97,6 +98,7 @@ public abstract class Player extends Entity {
     public void update(Set<Integer> keys) {
         wasMoving = moving;
         moving = false;
+        prevY = y;
 
         // Handle knockback physics first
         if (inKnockback) {
@@ -336,6 +338,14 @@ public abstract class Player extends Entity {
         } else {
             groundY = 160; // базовая земля
         }
+    }
+
+    public int getPrevY() {
+        return prevY;
+    }
+
+    public float getJumpVelocity() {
+        return jumpVelocity;
     }
 
 }

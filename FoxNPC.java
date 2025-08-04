@@ -1,12 +1,18 @@
 import java.util.Set;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.awt.image.BufferedImage;
 
 public class FoxNPC extends Entity {
     private enum Direction {
         LEFT, RIGHT
+    }
+
+    enum CollisionResult {
+        NONE,
+        PLAYER_ABOVE,
+        FOX_ABOVE,
+        SIDE
     }
 
     private enum State {
@@ -33,7 +39,6 @@ public class FoxNPC extends Entity {
     private final BufferedImage[] idleLeft;
 
     private List<Particle> particles = new ArrayList<>();
-    private boolean isDying = false;
 
     private Player player;
 
@@ -155,38 +160,24 @@ public class FoxNPC extends Entity {
         if (attackCooldown > 0)
             return;
 
-        // Проверка: игрок сверху (только если нижняя часть игрока над верхней частью
-        // лисы)
-
-        // Сначала грубая проверка пересечения прямоугольников
         if (x < player.getX() + player.getWidth() &&
                 x + width > player.getX() &&
                 y < player.getY() + player.getHeight() &&
                 y + height > player.getY()) {
 
-            BufferedImage foxFrame = (currentDirection == Direction.RIGHT)
-                    ? walkRight[animationFrame % walkRight.length]
-                    : walkLeft[animationFrame % walkLeft.length];
+            boolean wasAbove = (player.getPrevY() + player.getHeight()) <= this.y;
+            boolean falling = player.getJumpVelocity() > 0;
 
-            BufferedImage playerFrame = player.getCurrentFrame();
-            int foxTop = y - foxFrame.getHeight() + foxFrame.getHeight() / 2;
-            int playerBottom = player.getY();
-
-            // Проверка: игрок сверху (только если нижняя часть игрока над верхней частью
-            // лисы)
-            if (playerBottom <= foxTop) {
+            if (wasAbove && falling) {
+                // stomp
                 player.triggerJump();
                 die();
-                return;
-            }
-
-            if (playerFrame != null
-                    && pixelPerfectCollision(foxFrame, x, y, playerFrame, player.getX(), player.getY())) {
+            } else {
+                // side-hit
                 player.takeDamage(1, x);
-                attackCooldown = 60; // Cooldown in frames
+                attackCooldown = 60;
             }
         }
-
     }
 
     @Override
@@ -218,31 +209,6 @@ public class FoxNPC extends Entity {
         Sprite.drawImage(pixels, screenW, screenH, x, y - height, img);
     }
 
-    private boolean pixelPerfectCollision(BufferedImage aImage, int ax, int ay,
-            BufferedImage bImage, int bx, int by) {
-        int aWidth = aImage.getWidth();
-        int aHeight = aImage.getHeight();
-        int bWidth = bImage.getWidth();
-        int bHeight = bImage.getHeight();
-
-        int startX = Math.max(ax, bx);
-        int startY = Math.max(ay, by);
-        int endX = Math.min(ax + aWidth, bx + bWidth);
-        int endY = Math.min(ay + aHeight, by + bHeight);
-
-        for (int y = startY; y < endY; y++) {
-            for (int x = startX; x < endX; x++) {
-                int aPixel = aImage.getRGB(x - ax, y - ay);
-                int bPixel = bImage.getRGB(x - bx, y - by);
-
-                if (((aPixel >>> 24) != 0) && ((bPixel >>> 24) != 0)) {
-                    return true; // обоих пикселей есть непрозрачность — столкновение
-                }
-            }
-        }
-        return false;
-    }
-
     public boolean isAlive() {
         return isAlive;
     }
@@ -262,7 +228,6 @@ public class FoxNPC extends Entity {
 
     public void die() {
         isAlive = false;
-        isDying = true;
 
         BufferedImage baseImage = (currentDirection == Direction.RIGHT)
                 ? idleRight[0]
