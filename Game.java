@@ -23,6 +23,9 @@ public class Game extends JPanel implements Runnable, KeyListener {
     private int fadeAlpha = 0;
     private final int fadeSpeed = 3; // Controls fade speed (1–10 range is good)
 
+    private int xScroll = 0;
+    private int yScroll = 0;
+
     private final BufferedImage image;
     private final int[] pixels;
 
@@ -35,6 +38,8 @@ public class Game extends JPanel implements Runnable, KeyListener {
     private final List<Entity> entities = new ArrayList<>();
 
     private Clip bgMusic;
+
+    private Menu menu = new Menu(this);
 
     private enum GameState {
         MAIN_MENU,
@@ -80,25 +85,28 @@ public class Game extends JPanel implements Runnable, KeyListener {
     }
 
     private void update() {
-        currentLevel.render(pixels, width, height);
-
+        currentLevel.render(pixels, width, height, xScroll, yScroll);
         if (gameState == GameState.PLAYING) {
-            if (bgMusic != null && !bgMusic.isRunning()) {
-                bgMusic.loop(Clip.LOOP_CONTINUOUSLY);
-            }
+            // Follow player with camera
+            xScroll = player.getX() - width / 2;
+            yScroll = player.getY() - height / 2;
+
+            //// Clamp camera to level boundaries
+            xScroll = Math.max(0, Math.min(xScroll, currentLevel.getWidth() - width));
+            yScroll = Math.max(0, Math.min(yScroll, currentLevel.getHeight() - height));
+
+            // Render background/level with scroll
+            currentLevel.render(pixels, width, height, xScroll, yScroll);
+
+            // Update and render entities
             for (Entity e : entities) {
                 e.update(keys);
                 player.checkBlockCollision(blocks);
-                e.render(pixels, width, height);
-                for (Block block : blocks) {
-                    block.render(pixels, width, height);
-                }
+                e.render(pixels, width, height, xScroll, yScroll); // pass scroll to entity rendering
             }
 
-            if (player.getHealth() <= 0) {
-                gameState = GameState.GAME_OVER;
-                fadeAlpha = 0; // Reset fade
-                stopMusic();
+            for (Block block : blocks) {
+                block.render(pixels, width, height, xScroll, yScroll);
             }
         } else if (gameState == GameState.GAME_OVER) {
             stopMusic();
@@ -114,11 +122,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
         g.drawImage(image, 0, 0, width * scale, height * scale, null);
 
         if (gameState == GameState.MAIN_MENU) {
-            g.setColor(Color.BLACK);
-            g.setFont(new Font("Arial", Font.BOLD, 24));
-            g.drawString("Brown Rabbit Adventure", 40, 80);
-            g.setFont(new Font("Arial", Font.BOLD, 16));
-            g.drawString("Press ENTER to Start", 90, 130);
+            menu.render(g);
         } else if (gameState == GameState.PLAYING) {
             drawHealthBar(g);
         } else if (gameState == GameState.GAME_OVER) {
@@ -157,8 +161,17 @@ public class Game extends JPanel implements Runnable, KeyListener {
     public void keyPressed(KeyEvent e) {
         keys.add(e.getKeyCode());
 
+        if (gameState == GameState.MAIN_MENU) {
+
+            if (keys.contains(KeyEvent.VK_UP) || keys.contains(KeyEvent.VK_W)) {
+                menu.setSelectedOption(Menu.MenuOption.START);
+            } else if (keys.contains(KeyEvent.VK_DOWN) || keys.contains(KeyEvent.VK_S)) {
+                menu.setSelectedOption(Menu.MenuOption.EXIT);
+            }
+        }
+
         if (gameState == GameState.MAIN_MENU && e.getKeyCode() == KeyEvent.VK_ENTER) {
-            gameState = GameState.PLAYING;
+            menu.select();
         } else if ((gameState == GameState.PLAYING || gameState == GameState.GAME_OVER)
                 && e.getKeyCode() == KeyEvent.VK_R) {
             restartGame();
@@ -228,6 +241,13 @@ public class Game extends JPanel implements Runnable, KeyListener {
     private void stopMusic() {
         if (bgMusic != null && bgMusic.isRunning()) {
             bgMusic.stop();
+        }
+    }
+
+    public void startGame() {
+        gameState = GameState.PLAYING;
+        if (bgMusic != null) {
+            bgMusic.loop(Clip.LOOP_CONTINUOUSLY);
         }
     }
 }

@@ -16,10 +16,13 @@ public class Block extends Entity {
     }
 
     @Override
-    public void render(int[] pixels, int screenWidth, int screenHeight) {
+    public void render(int[] pixels, int screenWidth, int screenHeight, int xScroll, int yScroll) {
         BufferedImage img = texture[0];
-        Sprite.drawImage(pixels, screenWidth, screenHeight, x, y, img);
+        int drawX = x - xScroll;
+        int drawY = y - yScroll;
+        Sprite.drawImage(pixels, screenWidth, screenHeight, drawX, drawY, img);
     }
+
 
     public Rectangle getBounds() {
         return new Rectangle(x, y, width, height);

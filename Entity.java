@@ -21,7 +21,7 @@ public abstract class Entity {
     public abstract void update(Set<Integer> keys);
 
     // Draw yourself to the pixel buffer
-    public abstract void render(int[] pixels, int screenW, int screenH);
+    public abstract void render(int[] pixels, int screenW, int screenH, int xScroll, int yScroll);
 
     public abstract BufferedImage getCurrentFrame();
 }

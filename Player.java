@@ -179,6 +179,7 @@ public abstract class Player extends Entity {
         animationTick++;
         if (animationTick % 10 == 0)
             animationFrame++;
+
     }
 
     protected BufferedImage createRedTintFrame(BufferedImage original) {
@@ -209,13 +210,14 @@ public abstract class Player extends Entity {
     }
 
     @Override
-    public void render(int[] pixels, int screenW, int screenH) {
+    public void render(int[] pixels, int screenW, int screenH, int xScroll, int yScroll) {
         BufferedImage img = getCurrentFrame();
         if (img == null)
             return;
 
-        int drawX = x;
-        int drawY = getY() - img.getHeight(); // выравнивание по ногам
+        // Apply camera offset
+        int drawX = x - xScroll;
+        int drawY = getY() - img.getHeight() - yScroll; // align by feet
 
         // Draw base sprite
         Sprite.drawImage(pixels, screenW, screenH, drawX, drawY, img);
@@ -229,6 +231,7 @@ public abstract class Player extends Entity {
                 isHit = false;
         }
     }
+
 
     // Add getters for health
     public int getHealth() {
@@ -305,7 +308,6 @@ public abstract class Player extends Entity {
 
         for (Block block : blocks) {
             Rectangle blockBounds = block.getBounds();
-
             if (playerBounds.intersects(blockBounds)) {
                 Rectangle intersection = playerBounds.intersection(blockBounds);
 
@@ -338,6 +340,7 @@ public abstract class Player extends Entity {
         } else {
             groundY = 160; // базовая земля
         }
+
     }
 
     public int getPrevY() {

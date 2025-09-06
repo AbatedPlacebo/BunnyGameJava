@@ -22,12 +22,28 @@ public class Level {
         img.getRGB(0, 0, width, height, tiles, 0, width);
     }
 
-    public void render(int[] pixels, int screenW, int screenH) {
+public void render(int[] pixels, int screenW, int screenH, int xScroll, int yScroll) {
         for (int y = 0; y < screenH; y++) {
+            // Calculate the absolute y-coordinate in the level
+            int yy = y + yScroll;
+
+            // --- CHANGE FOR ENDLESS SCROLL ---
+            // Instead of checking bounds, we use the modulo operator (%) to wrap the coordinate.
+            // This makes the level texture repeat vertically.
+            // We add 'height' and take the modulo again to handle negative scroll values correctly.
+            int wrappedY = (yy % height + height) % height;
+
             for (int x = 0; x < screenW; x++) {
-                if (x >= width || y >= height)
-                    continue;
-                pixels[x + y * screenW] = tiles[x + y * width];
+                // Calculate the absolute x-coordinate in the level
+                int xx = x + xScroll;
+
+                // --- CHANGE FOR ENDLESS SCROLL ---
+                // We do the same for the x-coordinate to make the level repeat horizontally.
+                int wrappedX = (xx % width + width) % width;
+
+                // Use the wrapped coordinates to get the correct pixel from the level texture
+                // and place it on the screen.
+                pixels[x + y * screenW] = tiles[wrappedX + wrappedY * width];
             }
         }
     }

@@ -181,12 +181,11 @@ public class FoxNPC extends Entity {
     }
 
     @Override
-    public void render(int[] pixels, int screenW, int screenH) {
-
-        BufferedImage img;
+    public void render(int[] pixels, int screenW, int screenH, int xScroll, int yScroll) {
         if (!isAlive)
             return;
 
+        BufferedImage img;
         switch (state) {
             case ATTACK:
                 img = (currentDirection == Direction.RIGHT)
@@ -206,8 +205,14 @@ public class FoxNPC extends Entity {
                         : walkLeft[animationFrame % walkLeft.length];
                 break;
         }
-        Sprite.drawImage(pixels, screenW, screenH, x, y - height, img);
+
+        // Apply camera offset
+        int drawX = x - xScroll;
+        int drawY = (y - height) - yScroll;
+
+        Sprite.drawImage(pixels, screenW, screenH, drawX, drawY, img);
     }
+
 
     public boolean isAlive() {
         return isAlive;
